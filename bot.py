@@ -1,40 +1,37 @@
 import logging
 import os
-from telegram import Update, ReplyKeyboardMarkup
+import sys
+from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
-# 1. LOGGING (Xatolarni ko'rish uchun)
+# Loglarni Render konsolida ko'rish uchun sozlash
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.INFO,
+    stream=sys.stdout
 )
+logger = logging.getLogger(__name__)
 
-# 2. TOKEN (Render Environment Variables'dan olinadi)
+# Tokenni Render Environment Variables'dan olamiz
 TOKEN = os.getenv("BOT_TOKEN")
 
-# 3. ASOSIY START BUYRUG'I
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    # Bu yerda hech qanday 'Updater' yoki 'dispatcher' ishlatilmaydi
-    await update.message.reply_text(
-        "Salom! Gulcha bot 20.8 versiyada muvaffaqiyatli ishga tushdi ✅",
-        reply_markup=ReplyKeyboardMarkup([["🍽 Menu"]], resize_keyboard=True)
-    )
+    await update.message.reply_text("✅ Bot muvaffaqiyatli ishga tushdi!")
 
-# 4. ASOSIY ISHGA TUSHIRISH FUNKSIYASI
 def main():
     if not TOKEN:
-        print("XATO: Render sozlamalarida BOT_TOKEN topilmadi!")
+        logger.error("BOT_TOKEN topilmadi! Render Environment bo'limini tekshiring.")
         return
 
-    # DIQQAT: v20.8 da faqat Application ishlatiladi
-    app = Application.builder().token(TOKEN).build()
-    
-    # Buyruqlarni qo'shish
-    app.add_handler(CommandHandler("start", start))
-    
-    # Botni yurgizish
-    print("Bot pooling rejimida ishga tushmoqda...")
-    app.run_polling(drop_pending_updates=True)
+    # v20.8 uchun to'g'ri struktura
+    try:
+        app = Application.builder().token(TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        
+        logger.info("Bot polling rejimida ishga tushmoqda...")
+        app.run_polling(drop_pending_updates=True)
+    except Exception as e:
+        logger.error(f"Botni ishga tushirishda xato: {e}")
 
 if __name__ == "__main__":
     main()
